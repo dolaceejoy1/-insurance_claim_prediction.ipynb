@@ -1,0 +1,89 @@
+# -insurance_claim_prediction.ipynb
+git clone https://github.com/YOUR_USERNAME/insurance-claim-prediction.git
+cd insurance-claim-prediction
+# paste files
+# Insurance Claim Prediction Project
+# Lead Data Analyst Project
+
+# =========================
+# 1. Data Loading
+# =========================
+import pandas as pd
+import numpy as np
+
+df = pd.read_csv('train.csv')
+df.head()
+git add .
+git commit -m "Insurance claim prediction project"
+git push
+# =========================
+# 2. Data Overview
+# =========================
+df.info()
+df.describe()
+df['Claim'].value_counts(normalize=True)
+# =========================
+# 3. Data Cleaning & Preprocessing
+# =========================
+from sklearn.impute import SimpleImputer
+
+num_cols = df.select_dtypes(include=np.number).columns
+cat_cols = df.select_dtypes(exclude=np.number).columns
+
+num_imputer = SimpleImputer(strategy='median')
+cat_imputer = SimpleImputer(strategy='most_frequent')
+
+df[num_cols] = num_imputer.fit_transform(df[num_cols])
+df[cat_cols] = cat_imputer.fit_transform(df[cat_cols])
+
+df = pd.get_dummies(df, drop_first=True)
+# =========================
+# 4. Exploratory Data Analysis
+# =========================
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+df['Claim'].value_counts().plot(kind='bar')
+plt.title('Claim Distribution')
+plt.show()
+# =========================
+# 5. Train-Test Split & Scaling
+# =========================
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+
+X = df.drop('Claim', axis=1)
+y = df['Claim']
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
+
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+# =========================
+# 6. Modeling
+# =========================
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.metrics import classification_report, roc_auc_score
+
+models = {
+    "Logistic Regression": LogisticRegression(max_iter=1000),
+    "Random Forest": RandomForestClassifier(n_estimators=200, random_state=42),
+    "Gradient Boosting": GradientBoostingClassifier()
+}
+
+for name, model in models.items():
+    model.fit(X_train, y_train)
+    preds = model.predict(X_test)
+    probs = model.predict_proba(X_test)[:,1]
+
+    print(f"\n{name}")
+    print(classification_report(y_test, preds))
+    print("ROC-AUC:", roc_auc_score(y_test, probs))
+     # =========================
+# 7. Conclusion
+# =========================
+print("Random Forest performed best based on ROC-AUC and recall.")
